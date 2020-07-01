@@ -193,17 +193,16 @@ function MainComponent() {
                                 onClick={() => {
                                     // const record = activeTable.selectRecords()[0];
                                     setMergeInProgress(true);
-                                    console.log("Active Table :: ", activeTable, " Selected Record :: ", records[0]);
                                     const data: Map<string, any> = getMergedData(selectedTemplateSchema, records[0]);
                                     generateDocument(selectedTemplate.id, data,true).then((response) => {
                                         console.log("Merge response :: ", response);
                                         setMergeInProgress(false);
                                         if (saveAsAttachment) {
                                             const fileUrl: string = response.data.file_url;
-                                            if (fileUrl.startsWith("http://")) {
-                                                fileUrl.replace("http://", "https://");
-                                            }
-                                            getFile(fileUrl).then((file) => activeTable.updateRecordAsync(records[0], {[attachmentFieldId]: file}))
+                                            const fileName: string = response.data.file_name;
+                                            const recordAttachments: Array<object> = records[0].getCellValue(attachmentFieldId) || [];
+                                            recordAttachments.push({url: fileUrl, filename: fileName});
+                                            activeTable.updateRecordAsync(records[0], {[attachmentFieldId]: recordAttachments})
                                         }
 
                                     });
@@ -211,7 +210,14 @@ function MainComponent() {
                             >
                                 Generate
                             </Button>
-                            <Button onClick={() => console.log("Cancel Button clicked")}>
+                            <Button
+                                disabled={mergeInProgress}
+                                onClick={() => {
+                                    setSelectedTemplate(null);
+                                    setSelectedTemplateSchema(null);
+                                    setSaveAsAttachment(false);
+                                }}
+                            >
                                 Cancel
                             </Button>
                         </Box>
