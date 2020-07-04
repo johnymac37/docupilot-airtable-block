@@ -1,76 +1,36 @@
-import {useBase, useLoadable, useWatchable} from "@airtable/blocks/ui";
+import {useBase, useLoadable, useRecordById, useWatchable} from "@airtable/blocks/ui";
 import {cursor} from "@airtable/blocks";
-import {AxiosResponse} from "axios";
-import axios from "axios";
+import {Table, Record} from "@airtable/blocks/models";
+import {RecordId} from "@airtable/blocks/types";
 
-export function getActiveTable() {
+export function getActiveTable(): Table {
     const base = useBase();
     // re-render whenever the active table or view changes
     useWatchable(cursor, ['activeTableId', 'activeViewId']);
-    const table = base.getTableByIdIfExists(cursor.activeTableId);
-    return table;
+    return base.getTableByIdIfExists(cursor.activeTableId);
 }
 
-export function getSelectedRecordIds(): Array<string> {
+export async function getSelectedRecords(table: Table) {
     // load selected records
     useLoadable(cursor);
     // re-render whenever the list of selected records changes
     useWatchable(cursor, ['selectedRecordIds']);
     // render the list of selected record ids
-    return cursor.selectedRecordIds;
+    const selectedRecordIds: Array<RecordId> = cursor.selectedRecordIds;
+
+    // query for all the records in "table"
+    const queryResult = await table.selectRecordsAsync();
+    const selectedRecords: Array<Record> = selectedRecordIds.map(recordId => queryResult.getRecordById(recordId));
+    // when you're done, unload the data:
+    queryResult.unloadData();
+
+    return selectedRecords;
 }
 
-export function getMergedData(schema, record) {
+export function getMergedData(schema: Array<{name: string, type: string}>, record: Record): Map<string, any> {
     const data: Map<string, any> = new Map<string, any>();
     schema.forEach((token) => {
         data[token.name] = record.getCellValueAsString(token.name);
     });
     return data
-}
-
-export async function getTemplates() {
-    try {
-        const response: AxiosResponse = await axios.get(`api/v1/templates`);
-        return response.data;
-    } catch (error) {
-        console.error("ERROR :: ", error);
-    } finally {
-
-    }
-}
-
-export async function getTemplateSchema(templateId) {
-    try {
-        const response: AxiosResponse = await axios.get(`api/v1/templates/${templateId}/schema`);
-        console.log(response);
-        return response.data;
-    } catch (error) {
-        console.error("ERROR :: ", error);
-    } finally {
-
-    }
-}
-
-export async function generateDocument(templateId, data, testMode) {
-    try {
-        const endPoint = testMode?'test':'merge';
-        const response: AxiosResponse = await axios.post(`api/v1/templates/${templateId}/${endPoint}`, data);
-        console.log(response);
-        return response.data;
-    } catch (error) {
-        console.error("ERROR :: ", error);
-    } finally {
-
-    }
-}
-
-export async function getFile(url) {
-    try {
-        const response: AxiosResponse = await axios.get('', {baseURL: url});
-        return response;
-    } catch (error) {
-        console.error("ERROR :: ", error);
-    } finally {
-
-    }
 }
