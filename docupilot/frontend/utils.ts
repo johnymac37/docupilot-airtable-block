@@ -10,21 +10,13 @@ export function getActiveTable(): Table {
     return base.getTableByIdIfExists(cursor.activeTableId);
 }
 
-export async function getSelectedRecords(table: Table) {
+export function getSelectedRecordIds(): Array<RecordId> {
     // load selected records
     useLoadable(cursor);
     // re-render whenever the list of selected records changes
     useWatchable(cursor, ['selectedRecordIds']);
     // render the list of selected record ids
-    const selectedRecordIds: Array<RecordId> = cursor.selectedRecordIds;
-
-    // query for all the records in "table"
-    const queryResult = await table.selectRecordsAsync();
-    const selectedRecords: Array<Record> = selectedRecordIds.map(recordId => queryResult.getRecordById(recordId));
-    // when you're done, unload the data:
-    queryResult.unloadData();
-
-    return selectedRecords;
+    return cursor.selectedRecordIds;
 }
 
 export function getMergedData(schema: Array<{name: string, type: string}>, record: Record): Map<string, any> {
