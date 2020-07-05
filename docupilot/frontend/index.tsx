@@ -12,12 +12,13 @@ import {
     Loader,
     Text,
     Switch,
-    FieldPickerSynced
+    FieldPickerSynced,
+    FieldPicker
 } from '@airtable/blocks/ui';
 import {InformationComponent} from './common';
-import {getActiveTable, getSelectedRecords, getMergedData} from './utils';
+import {getActiveTable, getSelectedRecordIds, getMergedData} from './utils';
 import {setApiKey, getTemplates, getTemplateSchema, generateDocument} from './apicallouts';
-import {Record, Table} from "@airtable/blocks/models";
+import {Field, Record, Table, FieldType} from "@airtable/blocks/models";
 
 function DocupilotBlock() {
 
@@ -51,16 +52,16 @@ function MainComponent() {
     const apikey: string = globalConfig.get('api-key');
 
     const [templates, setTemplates] = React.useState(null );
-    const [selected_records, setSelectedRecords] = React.useState(null );
     const [selected_template, setSelectedTemplate] = React.useState(null );
 
     const active_table: Table = getActiveTable();
+    const selected_record_ids = getSelectedRecordIds();
 
     if (!apikey) {
         return <InformationComponent content={"Add a valid Api Key in the settings page"}/>;
     } else {
         setApiKey(apikey);
-        if (!templates) {
+        if (templates == null) {
             getTemplates().then((response) => {
                 if (response) {
                     setTemplates(response.data);
@@ -69,17 +70,12 @@ function MainComponent() {
         }
     }
 
-    getSelectedRecords(active_table).then(_ => {
-        console.log("RECORDS :: " , _);
-        setSelectedRecords(_)
-    });
-
-    if (selected_records && selected_records.length) {
+    if (selected_record_ids && selected_record_ids.length) {
         if (selected_template) {
             return <TemplateMergeComponent
                 activeTable={active_table}
                 selectedTemplate={selected_template}
-                selectedRecords={selected_records}
+                selectedRecordIds={selected_record_ids}
                 cancelAction={() => setSelectedTemplate(null)}
             />
         } else {
@@ -113,18 +109,27 @@ function TemplateListComponent({templates, setSelectedTemplate}) {
     </Box>
 }
 
-function TemplateMergeComponent({activeTable, selectedTemplate, selectedRecords, cancelAction}) {
+function TemplateMergeComponent({activeTable, selectedTemplate, selectedRecordIds, cancelAction}) {
 
     // @ts-ignore
-    const attachment_field_id: string = globalConfig.get('attachment-field-id');
+    // const attachment_field_id: string = globalConfig.get('attachment-field-id');
     const [save_as_attachment, setSaveAsAttachment] = React.useState(false );
+    // @ts-ignore
+    const [attachment_field, setAttachmentField]: Field = React.useState(null );
     const [schema, setSchema] = React.useState(null );
 
-    getTemplateSchema(selectedTemplate.id).then((response) => {
-        if (response) {
-            setSchema(response.data.schema);
-        }
-    });
+    if (selectedRecordIds.length > 1 && (save_as_attachment || attachment_field != null)) {
+        setSaveAsAttachment(false);
+        setAttachmentField(null);
+    }
+
+    if (schema == null) {
+        getTemplateSchema(selectedTemplate.id).then((response) => {
+            if (response) {
+                setSchema(response.data.schema);
+            }
+        });
+    }
 
     return <Box
         backgroundColor="white"
@@ -134,7 +139,7 @@ function TemplateMergeComponent({activeTable, selectedTemplate, selectedRecords,
         <dl>
             <TemplateItem key={selectedTemplate.id} template={selectedTemplate} onClick={undefined}/>
         </dl>
-        {selectedRecords.length < 2 &&
+        {selectedRecordIds.length < 2 &&
         <Switch
             value={save_as_attachment}
             onChange={newValue => setSaveAsAttachment(newValue)}
@@ -143,10 +148,16 @@ function TemplateMergeComponent({activeTable, selectedTemplate, selectedRecords,
         />
         }
         {save_as_attachment &&
-        <FieldPickerSynced table={activeTable} globalConfigKey="attachment-field-id"/>
+        <FieldPicker
+            table={activeTable}
+            field={attachment_field}
+            allowedTypes={[FieldType.MULTIPLE_ATTACHMENTS]}
+            onChange={newField => setAttachmentField(newField)}
+            marginY="10px"
+        />
         }
         <Box
-            paddingY="10px"
+            paddingY="20px"
             display="flex"
             flexDirection="row-reverse"
             borderBottom="solid 0.5px LightGray"
@@ -156,18 +167,21 @@ function TemplateMergeComponent({activeTable, selectedTemplate, selectedRecords,
                 variant="primary"
                 disabled={schema == null}
                 onClick={() => {
-                    selectedRecords.forEach(record => {
-                        const merged_data: Map<string, any> = getMergedData(schema, record);
-                        generateDocument(selectedTemplate.id, merged_data).then(response => {
-                            if (save_as_attachment) {
-                                // @ts-ignore
-                                const attachments: Array<object> = record.getCellValue(attachment_field_id) || [];
-                                attachments.push({url: response.data.file_url, filename: response.data.file_name});
-                                activeTable.updateRecordAsync(record[0], {[attachment_field_id]: attachments})
-                            }
-
+                    activeTable.selectRecordsAsync().then(query => {
+                        selectedRecordIds.forEach(record_id => {
+                            const record: Record = query.getRecordById(record_id);
+                            // @ts-ignore
+                            const attachments: Array<{url: string, filename: string}> = (attachment_field && record.getCellValue(attachment_field)) || [];
+                            const merged_data: Map<string, any> = getMergedData(schema, record);
+                            generateDocument(selectedTemplate.id, merged_data).then(response => {
+                                if (save_as_attachment && attachment_field) {
+                                    attachments.push({url: response.data.file_url, filename: response.data.file_name});
+                                    activeTable.updateRecordAsync(record, {[attachment_field.id]: attachments})
+                                }
+                            });
                         });
-                    });
+                        query.unloadData();
+                    }).catch(error => console.log(error));
                 }}
             >
                 Generate
@@ -203,34 +217,6 @@ function TemplateItem({template, onClick}) {
         </Box>
     </dt>
 }
-
-// function GenerateButtonComponent({activeTable, selectedTemplateId, selectedTemplateSchema, saveAsAttachment, attachmentFieldId}) {
-//
-//     const records = useRecords(activeTable.selectRecords());
-//     return <Button
-//         marginLeft="10px"
-//         variant="primary"
-//         disabled={!selectedTemplateSchema}
-//         onClick={() => {
-//             // const record = activeTable.selectRecords()[0];
-//             const data: Map<string, any> = getMergedData(selectedTemplateSchema, records[0]);
-//             generateDocument(selectedTemplateId, data,true).then((response) => {
-//                 console.log("Merge response :: ", response);
-//                 if (saveAsAttachment) {
-//                     const fileUrl: string = response.data.file_url;
-//                     const fileName: string = response.data.file_name;
-//                     // @ts-ignore
-//                     const recordAttachments: Array<object> = records[0].getCellValue(attachmentFieldId) || [];
-//                     recordAttachments.push({url: fileUrl, filename: fileName});
-//                     activeTable.updateRecordAsync(records[0], {[attachmentFieldId]: recordAttachments})
-//                 }
-//
-//             });
-//         }}
-//     >
-//         Generate
-//     </Button>
-// }
 
 function SchemaMappingComponent() {
     return <table>

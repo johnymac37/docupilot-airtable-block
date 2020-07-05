@@ -9,7 +9,7 @@ export function setApiKey(apikey: string) {
 
 export async function getTemplates() {
     try {
-        const response: AxiosResponse = await axios.get(`api/v1/templates`);
+        const response: AxiosResponse = await axios.get(`api/v1/templates`, {params: {filter: 'all'}});
         return response.data;
     } catch (error) {
         console.error("ERROR :: ", error);
