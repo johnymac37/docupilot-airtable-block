@@ -1,14 +1,19 @@
-import {Box} from "@airtable/blocks/ui";
+import {Box, Icon, Text} from "@airtable/blocks/ui";
 import React from "react";
 
-export function InformationComponent({content}) {
-    return <Box
-        backgroundColor="white"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        height="300px"
-    >
-        {content}
-    </Box>
+export function InformationComponent({icon_name, icon_color, content}) {
+    return (
+        <Box
+            backgroundColor="white"
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            minHeight="300px"
+            height="100%"
+        >
+            <Icon name={icon_name} size={60} fillColor={icon_color} margin={2}/>
+            <Text as="p" size="large" textColor="light">{content}</Text>
+        </Box>
+    );
 }

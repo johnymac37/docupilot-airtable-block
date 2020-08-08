@@ -7,6 +7,11 @@ export function setApiKey(apikey: string) {
     axios.defaults.headers.common['apikey'] = apikey;
 }
 
+export async function getProfileDetails(apikey) {
+    const response: AxiosResponse = await axios.get(`accounts/v1/me`, {headers: {apikey: apikey}});
+    return response.data;
+}
+
 export async function getTemplates() {
     try {
         const response: AxiosResponse = await axios.get(`api/v1/templates`, {params: {filter: 'all'}});
@@ -36,17 +41,6 @@ export async function generateDocument(templateId, data) {
         const response: AxiosResponse = await axios.post(`api/v1/templates/${templateId}/merge`, data);
         console.log(response);
         return response.data;
-    } catch (error) {
-        console.error("ERROR :: ", error);
-    } finally {
-
-    }
-}
-
-export async function getFile(url) {
-    try {
-        const response: AxiosResponse = await axios.get('', {baseURL: url});
-        return response;
     } catch (error) {
         console.error("ERROR :: ", error);
     } finally {
