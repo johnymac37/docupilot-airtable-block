@@ -1,6 +1,6 @@
 import axios, {AxiosResponse, AxiosError} from "axios";
 
-axios.defaults.baseURL = 'https://staging.docupilot.app/';
+axios.defaults.baseURL = 'https://dashboard.docupilot.app/';
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 export function setApiKey(apikey: string) {
