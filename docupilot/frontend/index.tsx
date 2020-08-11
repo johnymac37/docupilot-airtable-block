@@ -27,16 +27,4 @@ function DocupilotBlock() {
     }
 }
 
-// function SchemaMappingComponent() {
-//     return <table>
-//         <thead>
-//         <tr>
-//             <th>Field</th>
-//             <th>Tag</th>
-//         </tr>
-//         </thead>
-//         {/*<tbody>{schemaRows}</tbody>*/}
-//     </table>
-// }
-
 initializeBlock(() => <DocupilotBlock />);

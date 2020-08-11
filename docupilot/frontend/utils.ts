@@ -19,10 +19,10 @@ export function getSelectedRecordIds(): Array<RecordId> {
     return cursor.selectedRecordIds;
 }
 
-export function getMergedData(schema: Array<{name: string, type: string}>, record: Record): Map<string, any> {
+export function getMergedData(mapping: Map<{id: string, name: string}, any>, record: Record): Map<string, any> {
     const data: Map<string, any> = new Map<string, any>();
-    schema.forEach((token) => {
-        data[token.name] = record.getCellValueAsString(token.name);
+    Array.from(mapping.entries()).forEach(([key,value]) => {
+        data[key.name] = value? record.getCellValueAsString(value.id): null;
     });
     return data
 }
