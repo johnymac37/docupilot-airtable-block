@@ -26,7 +26,6 @@ export async function getTemplates() {
 export async function getTemplateSchema(templateId) {
     try {
         const response: AxiosResponse = await axios.get(`api/v1/templates/${templateId}/schema`);
-        console.log(response);
         return response.data;
     } catch (error) {
         console.error("ERROR :: ", error);
@@ -39,7 +38,6 @@ export async function generateDocument(templateId, data) {
     try {
         // const endPoint = testMode?'test':'merge';
         const response: AxiosResponse = await axios.post(`api/v1/templates/${templateId}/merge`, data);
-        console.log(response);
         return response.data;
     } catch (error) {
         console.error("ERROR :: ", error);
