@@ -1,16 +1,15 @@
 import React from "react";
-import {base} from '@airtable/blocks';
-import {Box, Button, FieldPicker, Heading, Icon, Input, Switch, Text} from "@airtable/blocks/ui";
-import {FieldType, Record, Table, Field} from "@airtable/blocks/models";
+import {Box, Button, FieldPicker, Heading, Icon, Input, Switch, Text, Loader} from "@airtable/blocks/ui";
+import {FieldType, Record, Table} from "@airtable/blocks/models";
 import {SchemaComponent} from "./schema";
 import {LoaderComponent} from "./common";
 import {getActiveTable, getMergedData} from "./utils";
 import {generateDocument, getTemplateSchema} from "./apicallouts";
 
 
-function TemplateItem({template, select}) {
+function TemplateItem({key, template, select}) {
     return (
-        <dt>
+        <dt key={key}>
             <Box paddingX={3} paddingY={1} display="flex" flexDirection="row" style={{cursor: "pointer"}}
                  hasOnClick={true} borderBottom="1px solid #E5E5E5" alignItems="center"
                  onClick={(event) => select(template)}>
@@ -66,33 +65,42 @@ function TemplateMergeComponent({selectedTemplate, selectedRecordIds, setRoute, 
                 : <LoaderComponent/>
             }
 
-            <Button margin="12px" width="100%" variant="primary"  disabled={!schema} onClick={() => {
-                // setMergeInprogress(true);
+            <Button margin="12px" width="100%" variant="primary"  disabled={!schema || merge_inprogress} onClick={() => {
+                setMergeInprogress(true);
                 active_table.selectRecordsAsync().then(query => {
                     selectedRecordIds.forEach(record_id => {
                         const record: Record = query.getRecordById(record_id);
                         // @ts-ignore
-                        // const attachments: Array<{url: string, filename: string}> = (attachment_field && record.getCellValue(attachment_field)) || [];
-                        const merged_data: Map<string, any> = getMergedData(mapping, record);
-                        // generateDocument(selectedTemplate.id, merged_data).then(response => {
-                        //     if (save_as_attachment && attachment_field) {
-                        //         attachments.push({url: response.data.file_url, filename: response.data.file_name});
-                        //         active_table.updateRecordAsync(record, {[attachment_field.id]: attachments})
-                        //     }
-                        //     setMergeInprogress(false);
-                        //     setRoute("merge-success");
-                        // }).catch(error => {
-                        //     setMergeInprogress(false);
-                        //     setRoute("merge-fail");
-                        // });
+                        const attachments: Array<{url: string, filename: string}> = (attachment_field && record.getCellValue(attachment_field)) || [];
+                        getMergedData(mapping, record).then(merged_data => {
+                            generateDocument(selectedTemplate.id, merged_data).then(response => {
+                                if (save_as_attachment && attachment_field) {
+                                    attachments.push({url: response.data.file_url, filename: response.data.file_name});
+                                    active_table.updateRecordAsync(record, {[attachment_field.id]: attachments})
+                                }
+                                setMergeInprogress(false);
+                                setRoute("merge-success");
+                            }).catch(error => {
+                                console.log("error in generateDocument :: ", error);
+                                setMergeInprogress(false);
+                                setRoute("merge-fail");
+                            });
+                        }).catch(error => {
+                            console.log("error in getMergedData :: ", error);
+                            setMergeInprogress(false);
+                            setRoute("merge-fail");
+                        })
                     });
                     query.unloadData();
                 }).catch(error => {
-                    // setMergeInprogress(false);
-                    // setRoute("merge-fail");
+                    setMergeInprogress(false);
+                    setRoute("merge-fail");
                 });
             }}>
-                Create document
+                {merge_inprogress
+                    ? <Loader scale={0.3} fillColor="#fff"/>
+                    : 'Create document'
+                }
             </Button>
         </Box>
     );

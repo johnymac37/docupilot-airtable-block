@@ -7,7 +7,7 @@ import {RecordId} from "@airtable/blocks/types";
 
 
 export function MainComponent() {
-    const [route, setRoute] = React.useState('template' );
+    const [route, setRoute] = React.useState('template-view' );
     const [templates, setTemplates] = React.useState(null );
     const [selected_template, setSelectedTemplate] = React.useState(null );
     const selected_record_ids: Array<RecordId> = getSelectedRecordIds();
@@ -16,7 +16,6 @@ export function MainComponent() {
         getTemplates().then((response) => {
             if (response) {
                 setTemplates(response.data);
-                setSelectedTemplate(response.data[1]);
             }
         });
     }
@@ -25,7 +24,7 @@ export function MainComponent() {
         refreshTemplates();
     }
 
-    if (route == 'template') {
+    if (route == 'template-view') {
         if (!selected_record_ids.length) {
             return <InformationComponent icon_name="checklist" icon_color="#B3B3B3" show_icon_bg={false}
                                          content="Select records to generate documents with docupilot"/>;
@@ -41,17 +40,17 @@ export function MainComponent() {
                                      actions={[
                                          {label: 'Dismiss', variant: 'secondary', onClick: () => {
                                              setSelectedTemplate(null);
-                                             setRoute('template');
+                                             setRoute('template-view');
                                          }}
                                          ]}/>;
     } else if (route == 'merge-fail') {
         return <InformationComponent icon_name="warning" icon_color="#F36F6F"
                                      content="Document creation failed ☹️"
                                      actions={[
-                                         {label: 'Retry again', onClick: () => {setRoute('template')}},
+                                         {label: 'Retry again', onClick: () => {setRoute('template-view')}},
                                          {label: 'Dismiss', variant: 'secondary', onClick: () => {
                                              setSelectedTemplate(null);
-                                             setRoute('template');
+                                             setRoute('template-view');
                                          }}
                                          ]}/>;
     }
