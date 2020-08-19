@@ -7,6 +7,7 @@ import {
 import {OnBoardingComponent} from './onboarding';
 import {SettingsComponent} from './settings';
 import {MainComponent} from './main';
+import {setApiKey} from './apicallouts';
 
 function DocupilotBlock() {
 
@@ -23,6 +24,7 @@ function DocupilotBlock() {
         return <OnBoardingComponent getStarted={() => setShowSettings(true)}/>;
     }
     else {
+        setApiKey(apikey);
         return <MainComponent/>
     }
 }

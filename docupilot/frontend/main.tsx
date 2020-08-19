@@ -16,6 +16,7 @@ export function MainComponent() {
         getTemplates().then((response) => {
             if (response) {
                 setTemplates(response.data);
+                setSelectedTemplate(response.data[1]);
             }
         });
     }
