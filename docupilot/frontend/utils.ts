@@ -20,41 +20,52 @@ export function getSelectedRecordIds(): Array<RecordId> {
     return cursor.selectedRecordIds;
 }
 
-function mergeData(mapping, record: Record) {
+async function mergeData(mapping, record: Record) {
     const airtable_field = mapping.get('__airtable_field__');
     const docupilot_type = mapping.get('__docupilot_type__');
-    console.log("airtable_field :: ", airtable_field);
-    console.log("docupilot_type :: ", docupilot_type);
-    const mapped_field_value = airtable_field ? record.getCellValue(airtable_field) : null;
-    delete mapping['__airtable_field__'];
-    delete mapping['__docupilot_type__'];
-    console.log("mapped_field_value :: ", mapped_field_value);
-    return  mapped_field_value;
+    mapping.delete('__airtable_field__');
+    mapping.delete('__docupilot_type__');
 
-    let child_entries = Array.from(mapping.entries());
-    if (child_entries.length == 0) {
-        mapping = mapped_field_value;
-        return;
-    } else {
-        console.log("mapped_field_value :: ", mapped_field_value);
-        // child_entries.forEach(([key, value]) => {
-        //     mergeData(value, mapped_field_value);
-        // })
+    if (airtable_field == null) {
+        return null;
+    } else if (docupilot_type == 'string') {
+        return record.getCellValueAsString(airtable_field);
     }
+
+    const child_entries = Array.from(mapping.entries());
+    if (child_entries.length != 0) {
+        const data_list = new Array<Map<string, any>>();
+        const linked_query = await record.selectLinkedRecordsFromCellAsync(airtable_field);
+        const linked_records = docupilot_type == 'object' ? linked_query.records.slice(0,1) : linked_query.records;
+        for (const linked_record of linked_records) {
+            const data = new Map<string, any>();
+            for (const entry of child_entries) {
+                const merged_data = await mergeData(entry[1], linked_record);
+                if (merged_data != null) {
+                    data.set(entry[0], merged_data);
+                }
+            }
+            if (data) {
+                data_list.push(data);
+            }
+        }
+        linked_query.unloadData();
+        return docupilot_type == 'object' ? data_list[0]: data_list;
+    }
+
+    return record.getCellValue(airtable_field);
 }
 
-export function getMergedData(mapping: Map<string, any>, record: Record): Map<string, any> {
-    console.log("mapping :: ", mapping);
+export async function getMergedData(mapping: Map<string, any>, record: Record) {
+    const data = new Map<string, any>();
 
-    const merged_data = new Map<string, any>();
-
-    Array.from(mapping.entries()).forEach(([key, value]) => {
-        console.log("key :: ", key);
-        console.log("value :: ", value);
-        merged_data.set(key, mergeData(value, record))
-    });
-    console.log("merged_data :: ", merged_data);
-    return merged_data
+    for (const [key, value] of mapping.entries()) {
+        const merged_data = await mergeData(value, record);
+        if (merged_data != null) {
+            data.set(key, merged_data);
+        }
+    }
+    return data
 }
 
 export function selectAllowedTypes(field_info) {
