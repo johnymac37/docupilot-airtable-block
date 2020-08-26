@@ -50,8 +50,9 @@ function MappingComponent({docupilot_field, table, cb, indentation=0}) {
     );
     let child_components;
     if (has_child) {
+        let child_count: number = 0;
         child_components = docupilot_field.fields.map(child_field => {
-            return <MappingComponent docupilot_field={child_field} table={linked_table} indentation={indentation+10}
+            return <MappingComponent key={child_count++} docupilot_field={child_field} table={linked_table} indentation={indentation+10}
                                      cb={(newValue) => {
                                          field_mapping.set(child_field.name, newValue);
                                          cb(field_mapping);
@@ -68,8 +69,9 @@ function MappingComponent({docupilot_field, table, cb, indentation=0}) {
 
 export function SchemaComponent({schema, activeTable, updateMapping}) {
 
+    let count: number = 0;
     const mapping_components = schema.map(docupilot_field => {
-        return <MappingComponent docupilot_field={docupilot_field} table={activeTable}
+        return <MappingComponent key={count++} docupilot_field={docupilot_field} table={activeTable}
                                  cb={(newValue) => updateMapping(docupilot_field.name, newValue)}
         />
     });

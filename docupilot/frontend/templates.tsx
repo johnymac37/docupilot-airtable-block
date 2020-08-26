@@ -7,9 +7,9 @@ import {getActiveTable, getMergedData} from "./utils";
 import {generateDocument, getTemplateSchema} from "./apicallouts";
 
 
-function TemplateItem({key, template, select}) {
+function TemplateItem({template, select}) {
     return (
-        <dt key={key}>
+        <dt>
             <Box paddingX={3} paddingY={1} display="flex" flexDirection="row" style={{cursor: "pointer"}}
                  hasOnClick={true} borderBottom="1px solid #E5E5E5" alignItems="center"
                  onClick={(event) => select(template)}>
@@ -56,7 +56,7 @@ function TemplateMergeComponent({selectedTemplate, selectedRecordIds, setRoute, 
             <Box marginY="12px">
                 <Switch size="large" backgroundColor="transparent" value={save_as_attachment} label="Upload document to an attachment field"
                         onChange={newValue => setSaveAsAttachment(newValue)}/>
-                <FieldPicker marginX="12px" placeholder="Select field" shouldAllowPickingNone={true}
+                <FieldPicker marginX="12px" placeholder="Select field" disabled={!save_as_attachment} shouldAllowPickingNone={true}
                              table={active_table} field={attachment_field} allowedTypes={[FieldType.MULTIPLE_ATTACHMENTS]}
                              onChange={newField => setAttachmentField(newField)}/>
             </Box>
@@ -73,7 +73,7 @@ function TemplateMergeComponent({selectedTemplate, selectedRecordIds, setRoute, 
                         // @ts-ignore
                         const attachments: Array<{url: string, filename: string}> = (attachment_field && record.getCellValue(attachment_field)) || [];
                         getMergedData(mapping, record).then(merged_data => {
-                            generateDocument(selectedTemplate.id, merged_data).then(response => {
+                            generateDocument(selectedTemplate.id, merged_data, save_as_attachment).then(response => {
                                 if (save_as_attachment && attachment_field) {
                                     attachments.push({url: response.data.file_url, filename: response.data.file_name});
                                     active_table.updateRecordAsync(record, {[attachment_field.id]: attachments})

@@ -34,10 +34,13 @@ export async function getTemplateSchema(templateId) {
     }
 }
 
-export async function generateDocument(templateId, data) {
+export async function generateDocument(templateId, data, download=false) {
     try {
-        // const endPoint = testMode?'test':'merge';
-        const response: AxiosResponse = await axios.post(`api/v1/templates/${templateId}/merge`, data);
+        let url_endpoint:  string = `api/v1/templates/${templateId}/merge`;
+        if (!!download) {
+            url_endpoint = url_endpoint + `?download=true`;
+        }
+        const response: AxiosResponse = await axios.post(url_endpoint, data);
         return response.data;
     } catch (error) {
         console.error("ERROR :: ", error);
