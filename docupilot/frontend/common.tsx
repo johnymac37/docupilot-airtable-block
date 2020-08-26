@@ -3,7 +3,8 @@ import React from "react";
 
 export function InformationComponent({icon_name, icon_color, show_icon_bg= true, content, actions = []}) {
 
-    const actionButtons = actions.map(action => <Button width="100%" marginTop={3} variant={action.variant}
+    let action_count: number = 0;
+    const actionButtons = actions.map(action => <Button key={action_count++} width="100%" marginTop={3} variant={action.variant}
                                                         onClick={action.onClick}>
         {action.label}
     </Button>);
