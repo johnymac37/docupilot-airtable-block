@@ -1,6 +1,6 @@
 import React from "react";
 import {Box, Button, FieldPicker, Heading, Icon, Input, Switch, Text, Loader} from "@airtable/blocks/ui";
-import {FieldType, Record, Table} from "@airtable/blocks/models";
+import {FieldType, Field, Record, Table} from "@airtable/blocks/models";
 import {SchemaComponent} from "./schema";
 import {LoaderComponent} from "./common";
 import {getActiveTable, getMergedData} from "./utils";
@@ -22,21 +22,22 @@ function TemplateItem({template, select}) {
 
 function TemplateMergeComponent({selectedTemplate, selectedRecordIds, setRoute, openList}) {
 
-    const [save_as_attachment, setSaveAsAttachment] = React.useState(false );
-    const [attachment_field, setAttachmentField] = React.useState(null );
-    const [schema, setSchema] = React.useState(null );
-    const [merge_inprogress, setMergeInprogress] = React.useState(false);
+    const [save_as_attachment, setSaveAsAttachment] = React.useState<boolean>(false);
+    const [attachment_field, setAttachmentField] = React.useState<Field>(null);
+    const [schema, setSchema] = React.useState<Docupilot.Schema>(null);
+    const [merge_inprogress, setMergeInprogress] = React.useState<boolean>(false);
 
     const active_table: Table = getActiveTable();
-    const [mapping, updateMapping] = [new Map<string, any>(), (key, value) => {
-        mapping.set(key, value);
-    }];
+    const mapping: Docupilot.Mapping = {};
+
+    function updateMapping(key: string, value: Docupilot.MappingValue) {
+        mapping[key] = value;
+    }
 
     if (schema == null) {
         getTemplateSchema(selectedTemplate.id).then((response) => {
             if (response) {
                 setSchema(response.data.schema);
-                console.log("schema :: ", response.data.schema);
             }
         });
     }
@@ -107,8 +108,8 @@ function TemplateMergeComponent({selectedTemplate, selectedRecordIds, setRoute, 
 }
 
 function TemplateListComponent({templates, selectTemplate, refreshTemplates}) {
-    const [search_term, setSearchTerm] = React.useState("" );
-    let filtered_templates = !search_term ? templates : templates.filter(_t => _t.title.toLowerCase().includes(search_term));
+    const [search_term, setSearchTerm] = React.useState<string>("");
+    let filtered_templates: Docupilot.TemplateList = !search_term ? templates : templates.filter(_t => _t.title.toLowerCase().includes(search_term));
 
     const template_items = filtered_templates.map((template) => <TemplateItem key={template.id} template={template}
                                                                               select={() => selectTemplate(template)}/>);

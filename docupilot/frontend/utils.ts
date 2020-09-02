@@ -20,11 +20,9 @@ export function getSelectedRecordIds(): Array<RecordId> {
     return cursor.selectedRecordIds;
 }
 
-async function mergeData(mapping, record: Record) {
-    const airtable_field = mapping.get('__airtable_field__');
-    const docupilot_type = mapping.get('__docupilot_type__');
-    mapping.delete('__airtable_field__');
-    mapping.delete('__docupilot_type__');
+async function mergeData(mappingValue: Docupilot.MappingValue, record: Record) {
+    const airtable_field = mappingValue.__airtable_field__;
+    const docupilot_type = mappingValue.__docupilot_type__;
 
     if (airtable_field == null) {
         return null;
@@ -32,17 +30,16 @@ async function mergeData(mapping, record: Record) {
         return record.getCellValueAsString(airtable_field);
     }
 
-    const child_entries = Array.from(mapping.entries());
-    if (child_entries.length != 0) {
+    if (mappingValue.fields != null) {
         const data_list = new Array<Map<string, any>>();
         const linked_query = await record.selectLinkedRecordsFromCellAsync(airtable_field);
         const linked_records = docupilot_type == 'object' ? linked_query.records.slice(0,1) : linked_query.records;
         for (const linked_record of linked_records) {
             const data = new Map<string, any>();
-            for (const entry of child_entries) {
-                const merged_data = await mergeData(entry[1], linked_record);
-                if (merged_data != null) {
-                    data.set(entry[0], merged_data);
+            for (const [key, value] of Object.entries(mappingValue.fields)) {
+                const child_merged_data = await mergeData(value, linked_record);
+                if (child_merged_data != null) {
+                    data.set(key, child_merged_data);
                 }
             }
             if (data) {
@@ -56,10 +53,10 @@ async function mergeData(mapping, record: Record) {
     return record.getCellValue(airtable_field);
 }
 
-export async function getMergedData(mapping: Map<string, any>, record: Record) {
+export async function getMergedData(mapping: Docupilot.Mapping, record: Record) {
     const data = new Map<string, any>();
 
-    for (const [key, value] of mapping.entries()) {
+    for (const [key, value] of Object.entries(mapping)) {
         const merged_data = await mergeData(value, record);
         if (merged_data != null) {
             data.set(key, merged_data);
@@ -68,9 +65,9 @@ export async function getMergedData(mapping: Map<string, any>, record: Record) {
     return data
 }
 
-export function selectAllowedTypes(field_info) {
-    if (field_info.type == 'array' && field_info.generics !=  'string') {
-        return docupilot_to_airtable_field_mapping[field_info.generics];
+export function selectAllowedTypes(schema_field: Docupilot.SchemaField): Array<string> {
+    if (schema_field.type == 'array' && schema_field.generics !=  'string') {
+        return docupilot_to_airtable_field_mapping[schema_field.generics];
     }
-    return docupilot_to_airtable_field_mapping[field_info.type];
+    return docupilot_to_airtable_field_mapping[schema_field.type];
 }

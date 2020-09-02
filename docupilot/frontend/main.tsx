@@ -1,15 +1,14 @@
 import React from "react";
+import {RecordId} from "@airtable/blocks/types";
 import {getSelectedRecordIds} from "./utils";
 import {getTemplates} from "./apicallouts";
 import {TemplateComponent} from "./templates";
 import {InformationComponent, LoaderComponent} from "./common";
-import {RecordId} from "@airtable/blocks/types";
-
 
 export function MainComponent() {
-    const [route, setRoute] = React.useState('template-view' );
-    const [templates, setTemplates] = React.useState(null );
-    const [selected_template, setSelectedTemplate] = React.useState(null );
+    const [route, setRoute] = React.useState<string>('template-view');
+    const [templates, setTemplates] = React.useState<Docupilot.TemplateList>(null);
+    const [selected_template, setSelectedTemplate] = React.useState<Docupilot.Template>(null);
     const selected_record_ids: Array<RecordId> = getSelectedRecordIds();
 
     function refreshTemplates() {

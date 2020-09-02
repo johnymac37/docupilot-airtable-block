@@ -1,10 +1,11 @@
+import React from "react";
 import {Box, Button, Heading, Input, Label, Text, TextButton, useGlobalConfig} from "@airtable/blocks/ui";
 import {getProfileDetails, setApiKey} from "./apicallouts";
-import React from "react";
+
 
 function APIKeyComponent({apikey, error, saveAPI}) {
-    const [input, setInput] = React.useState(apikey||"");
-    const [edit_mode, setEditMode] = React.useState(false);
+    const [input, setInput] = React.useState<string>(apikey||"");
+    const [edit_mode, setEditMode] = React.useState<boolean>(false);
 
     return (
         <Box marginTop={4}>
@@ -56,7 +57,7 @@ export function SettingsComponent({onConnect}) {
     const apikey: string = globalConfig.get('api-key');
     // @ts-ignore
     const profile_info: {name: string, email: string, org: string} = globalConfig.get('profile-info');
-    const [error, setError] = React.useState("");
+    const [error, setError] = React.useState<string>("");
 
     return (
         <Box backgroundColor="white" padding={5}>

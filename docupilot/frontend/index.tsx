@@ -14,7 +14,7 @@ function DocupilotBlock() {
     const globalConfig = useGlobalConfig();
     // @ts-ignore
     const apikey: string = globalConfig.get('api-key');
-    const [show_settings, setShowSettings] = React.useState(false);
+    const [show_settings, setShowSettings] = React.useState<boolean>(false);
 
     useSettingsButton(() => setShowSettings(!show_settings));
     if (show_settings) {
