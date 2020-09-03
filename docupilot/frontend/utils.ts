@@ -31,35 +31,35 @@ async function mergeData(mappingValue: Docupilot.MappingValue, record: Record) {
     }
 
     if (mappingValue.fields != null) {
-        const data_list = new Array<Map<string, any>>();
+        const data_list = [];
         const linked_query = await record.selectLinkedRecordsFromCellAsync(airtable_field);
         const linked_records = docupilot_type == 'object' ? linked_query.records.slice(0,1) : linked_query.records;
         for (const linked_record of linked_records) {
-            const data = new Map<string, any>();
+            const data = {};
             for (const [key, value] of Object.entries(mappingValue.fields)) {
                 const child_merged_data = await mergeData(value, linked_record);
                 if (child_merged_data != null) {
-                    data.set(key, child_merged_data);
+                    data[key] = child_merged_data;
                 }
             }
-            if (data) {
+            if (Object.keys(data).length != 0) {
                 data_list.push(data);
             }
         }
         linked_query.unloadData();
-        return docupilot_type == 'object' ? data_list[0]: data_list;
+        return docupilot_type == 'object' ? data_list[0]: (data_list.length ? data_list: null);
     }
 
     return record.getCellValue(airtable_field);
 }
 
 export async function getMergedData(mapping: Docupilot.Mapping, record: Record) {
-    const data = new Map<string, any>();
+    const data = {};
 
     for (const [key, value] of Object.entries(mapping)) {
         const merged_data = await mergeData(value, record);
         if (merged_data != null) {
-            data.set(key, merged_data);
+            data[key]  = merged_data
         }
     }
     return data
