@@ -20,7 +20,7 @@ function TemplateItem({template, select}) {
     );
 }
 
-function TemplateMergeComponent({selectedTemplate, selectedRecordIds, setRoute, openList}) {
+ function TemplateMergeComponent({selectedTemplate, selectedRecordIds, setRoute, setPageContext, openList}) {
 
     const [save_as_attachment, setSaveAsAttachment] = React.useState<boolean>(false);
     const [attachment_field, setAttachmentField] = React.useState<Field>(null);
@@ -69,18 +69,26 @@ function TemplateMergeComponent({selectedTemplate, selectedRecordIds, setRoute, 
             <Button margin="12px" width="100%" variant="primary"  disabled={!schema || merge_inprogress} onClick={() => {
                 setMergeInprogress(true);
                 active_table.selectRecordsAsync().then(query => {
+                    let merged_record_count = 0;
+                    let success_context = [];
                     selectedRecordIds.forEach(record_id => {
                         const record: Record = query.getRecordById(record_id);
+                        const record_name: string = record.name
                         // @ts-ignore
                         const attachments: Array<{url: string, filename: string}> = (attachment_field && record.getCellValue(attachment_field)) || [];
                         getMergedData(mapping, record).then(merged_data => {
                             generateDocument(selectedTemplate.id, merged_data, save_as_attachment).then(response => {
+                                merged_record_count++;
                                 if (save_as_attachment && attachment_field) {
                                     attachments.push({url: response.data.file_url, filename: response.data.file_name});
+                                    success_context.push({record: record_name, generated_document: response.data.file_name})
                                     active_table.updateRecordAsync(record, {[attachment_field.id]: attachments})
                                 }
-                                setMergeInprogress(false);
-                                setRoute("merge-success");
+                                if (merged_record_count == selectedRecordIds.length) {
+                                    setMergeInprogress(false);
+                                    setPageContext(success_context);
+                                    setRoute("merge-success");
+                                }
                             }).catch(error => {
                                 console.log("error in generateDocument :: ", error);
                                 setMergeInprogress(false);
@@ -127,13 +135,14 @@ function TemplateListComponent({templates, selectTemplate, refreshTemplates}) {
     );
 }
 
-export function TemplateComponent({templates, refreshTemplates, selected_template, selectTemplate, selected_record_ids, setRoute}) {
+export function TemplateComponent({templates, refreshTemplates, selected_template, selectTemplate, selected_record_ids, setRoute, setPageContext}) {
 
     if (selected_template) {
         return <TemplateMergeComponent
             selectedTemplate={selected_template}
             selectedRecordIds={selected_record_ids}
             setRoute={setRoute}
+            setPageContext={setPageContext}
             openList={() => selectTemplate(null)}
         />
     }
