@@ -1,50 +1,66 @@
 import React from "react";
-import {Box, Button, Heading, Input, Label, Text, TextButton, useGlobalConfig} from "@airtable/blocks/ui";
+import {
+    Box,
+    Button,
+    Input,
+    Label,
+    loadCSSFromString,
+    Text,
+    TextButton,
+    useGlobalConfig
+} from "@airtable/blocks/ui";
 import {getProfileDetails, setApiKey} from "./apicallouts";
+import {WrapperComponent} from "./common";
 
+loadCSSFromString(`.settings-action-box * {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 17px;
+}`)
 
 function APIKeyComponent({apikey, error, saveAPI}) {
     const [input, setInput] = React.useState<string>(apikey||"");
     const [edit_mode, setEditMode] = React.useState<boolean>(false);
 
     return (
-        <Box marginTop={4}>
-            <Label htmlFor="api-key">API Key</Label>
-            {!apikey || edit_mode
-                ? <Input id="api-key" name="apikey" value={input} onChange={event => {
-                    setInput(event.target.value);
-                }}/>
-                : <Text>{apikey}</Text>
+        <Box marginY="32px">
+            { !apikey &&
+                <Text fontSize="16px" fontWeight="600" lineHeight="24px">Configure API Key</Text>
             }
-            {!!error &&
+            <Box marginY="16px">
+                <Label htmlFor="api-key">API Key</Label>
+                {!apikey || edit_mode
+                    ? <Input id="api-key" name="apikey" value={input} onChange={event => {
+                        setInput(event.target.value);
+                    }}/>
+                    : <Text fontSize="17px" lineHeight="20px">{apikey}</Text>
+                }
+                {!!error &&
                 <Text textColor="red">{error} hello</Text>
-            }
-            <Box marginY={3} display="flex" flexDirection="row">
-                {!!apikey
-                    ? <div>
-                        {edit_mode
-                            ? <div>
-                                <Button variant="primary" size="small" width="100px" onClick={_ => {
-                                    saveAPI(input);
-                                    setEditMode(false);
-                                }}>
-                                    Save
-                                </Button>
-                                <Button variant="secondary" size="small" marginLeft="24px" onClick={() => {
-                                    setInput(apikey);
-                                    setEditMode(false)
-                                }}>
-                                    Cancel
-                                </Button>
-                            </div>
-                            : <TextButton onClick={() => setEditMode(true)}>
-                                Change
-                            </TextButton>
-                        }
-                    </div>
-                    : <Button variant="primary" width="100%" onClick={() => saveAPI(input, false)}>
+                }
+            </Box>
+            <Box className="settings-action-box">
+                {!apikey
+                    ? <Button variant="primary" width="100%" onClick={() => saveAPI(input, false)}>
                         Connect
                     </Button>
+                    : edit_mode
+                        ? <Box>
+                            <Button variant="primary" size="small" width="100px" onClick={_ => {
+                                saveAPI(input);
+                                setEditMode(false);
+                            }}>
+                                Save
+                            </Button>
+                            <Button variant="secondary" size="small" marginLeft="24px" onClick={() => {
+                                setInput(apikey);
+                                setEditMode(false)
+                            }}>
+                                Cancel
+                            </Button>
+                        </Box>
+                        : <TextButton onClick={() => setEditMode(true)}>Change</TextButton>
+
                 }
             </Box>
         </Box>
@@ -59,18 +75,19 @@ export function SettingsComponent({onConnect}) {
     const profile_info: {name: string, email: string, org: string} = globalConfig.get('profile-info');
     const [error, setError] = React.useState<string>("");
 
-    return (
-        <Box backgroundColor="white" padding={5}>
+    const settings_component =  (
+        <Box paddingY="24px">
             { !!profile_info &&
-                <Box>
+                <Box marginTop="12px">
                     <Label htmlFor="docupilot-email">Account</Label>
-                    <Text marginBottom="6px">{profile_info.email}</Text>
-                    <Text marginY="6px">{profile_info.name}</Text>
-                    <Text textColor="light">{profile_info.org} Org</Text>
+                    <Text fontSize="17px" lineHeight="20px">{profile_info.email}</Text>
                 </Box>
             }
-            { !apikey &&
-                <Heading as="h5" marginY={3}>Configure API Key</Heading>
+            { !!profile_info &&
+                <Box marginTop="12px">
+                    <Text fontSize="17px" lineHeight="20px">{profile_info.name}</Text>
+                    <Text textColor="light">{profile_info.org} Org</Text>
+                </Box>
             }
             <APIKeyComponent apikey={apikey} error={error} saveAPI={(api_input, is_update=true) => {
                 getProfileDetails(api_input).then(response => {
@@ -91,4 +108,6 @@ export function SettingsComponent({onConnect}) {
             }}/>
         </Box>
     );
+
+    return <WrapperComponent child_component={settings_component}/>
 }

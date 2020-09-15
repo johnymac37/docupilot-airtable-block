@@ -3,20 +3,19 @@ import {Box, Button, FieldPicker, Heading, Icon, Input, Switch, Text, Loader} fr
 import {FieldType, Field, Record, Table} from "@airtable/blocks/models";
 import {SchemaComponent} from "./schema";
 import {LoaderComponent} from "./common";
+import {ImageIcon} from "./images";
 import {getActiveTable, getMergedData} from "./utils";
 import {generateDocument, getTemplateSchema} from "./apicallouts";
 
 
 function TemplateItem({template, select}) {
     return (
-        <dt>
-            <Box paddingX={3} paddingY={1} display="flex" flexDirection="row" style={{cursor: "pointer"}}
-                 hasOnClick={true} borderBottom="1px solid #E5E5E5" alignItems="center"
-                 onClick={(event) => select(template)}>
-                <Icon name="file" size={32} />
-                <Text as="h3" marginX="12px">{template.title}</Text>
-            </Box>
-        </dt>
+        <Box paddingX="22px" paddingY="8px" display="flex" flexDirection="row" style={{cursor: "pointer"}}
+             hasOnClick={true} borderBottom="1px solid #E5E5E5" alignItems="center"
+             onClick={(event) => select(template)}>
+            <ImageIcon name={template.output_type}/>
+            <Text fontWeight={500} fontSize="14px" lineHeight="17px" marginLeft="12px">{template.title}</Text>
+        </Box>
     );
 }
 
@@ -43,21 +42,21 @@ function TemplateItem({template, select}) {
     }
 
     return (
-        <Box padding={3}>
+        <Box padding="24px">
             <Button icon="chevronLeft" variant="secondary" onClick={openList}>
-                back
+                <Text fontWeight="500" textColor="light">back</Text>
             </Button>
-            <Box margin="12px" display="flex" flexDirection="row" alignItems="center">
-                <Icon name="file" size={32} />
-                <Text as="h2" marginX="12px">{selectedTemplate.title}</Text>
+            <Box marginY="12px" display="flex" flexDirection="row" alignItems="center">
+                <ImageIcon name={selectedTemplate.output_type}/>
+                <Text fontWeight="500" fontSize="14px" lineHeight="17px" marginLeft="8px">{selectedTemplate.title}</Text>
             </Box>
-            <Text as="p" textColor="light" marginX="12px">
+            <Text as="p" textColor="light">
                 You can seemlessly insert values from Airtable records into your document by matching the Airtable field name to tags in your Docupilot template
             </Text>
             <Box marginY="12px">
                 <Switch size="large" backgroundColor="transparent" value={save_as_attachment} label="Upload document to an attachment field"
                         onChange={newValue => setSaveAsAttachment(newValue)}/>
-                <FieldPicker marginX="12px" placeholder="Select field" disabled={!save_as_attachment} shouldAllowPickingNone={true}
+                <FieldPicker placeholder="Select field" disabled={!save_as_attachment} shouldAllowPickingNone={true}
                              table={active_table} field={attachment_field} allowedTypes={[FieldType.MULTIPLE_ATTACHMENTS]}
                              onChange={newField => setAttachmentField(newField)}/>
             </Box>
@@ -66,7 +65,7 @@ function TemplateItem({template, select}) {
                 : <LoaderComponent/>
             }
 
-            <Button margin="12px" width="100%" variant="primary"  disabled={!schema || merge_inprogress} onClick={() => {
+            <Button width="100%" variant="primary"  disabled={!schema || merge_inprogress} onClick={() => {
                 setMergeInprogress(true);
                 active_table.selectRecordsAsync().then(query => {
                     let merged_record_count = 0;
@@ -108,7 +107,7 @@ function TemplateItem({template, select}) {
             }}>
                 {merge_inprogress
                     ? <Loader scale={0.3} fillColor="#fff"/>
-                    : 'Create document'
+                    : <Text fontWeight="500" fontSize="14px" lineHeight="17px" textColor="white">Create document</Text>
                 }
             </Button>
         </Box>
@@ -122,12 +121,14 @@ function TemplateListComponent({templates, selectTemplate, refreshTemplates}) {
     const template_items = filtered_templates.map((template) => <TemplateItem key={template.id} template={template}
                                                                               select={() => selectTemplate(template)}/>);
     return (
-        <Box backgroundColor="white" paddingY={4} overflow="hidden">
-            <Box display="flex" paddingX={3}>
-                <Heading width="100%">Select a docupilot template</Heading>
-                <Button aria-label="refresh-templates" icon="redo" variant="secondary" size="large" onClick={refreshTemplates}/>
+        <Box paddingY={4}>
+            <Box display="flex" marginX="24px" marginBottom="16px">
+                <Heading as="h3" flex={1}>Select a docupilot template</Heading>
+                <Button aria-label="sync-templates" variant="secondary" onClick={refreshTemplates}>
+                    <ImageIcon name="sync"/>
+                </Button>
             </Box>
-            <Input marginX={3} marginY={1} value={search_term} placeholder="Search documents" onChange={e => setSearchTerm(e.target.value)}/>
+            <Input marginX="24px" marginY="12px" value={search_term} placeholder="Search documents" onChange={e => setSearchTerm(e.target.value)}/>
             <dl>
                 {template_items}
             </dl>

@@ -35,7 +35,7 @@ function CustomFieldPicker({docupilot_field_name, table, onSelection, allowed_fi
                    })}/>
 }
 
-function MappingComponent({docupilot_field, table, cb, indentation=0}) {
+function MappingComponent({docupilot_field, table, cb, level= 0}) {
     const [linked_table, setLinkedTable] = React.useState(null);
     const has_child = docupilot_field.fields != null;
     let mapping_value: Docupilot.MappingValue = {
@@ -44,8 +44,8 @@ function MappingComponent({docupilot_field, table, cb, indentation=0}) {
     };
 
     let main_component = (
-        <Box display="flex" paddingY="8px">
-            <Text paddingLeft={`${indentation}px`} width="50%" size="large">{docupilot_field.name}</Text>
+        <Box display="flex" paddingY="8px" paddingLeft={level > 0? '10px': null}>
+            <Text width="50%" fontWeight="500">{docupilot_field.name}</Text>
             <CustomFieldPicker docupilot_field_name={docupilot_field.name} table={table}
                                onSelection={(newValue) => {
                                    mapping_value.__airtable_field__ = newValue;
@@ -60,7 +60,7 @@ function MappingComponent({docupilot_field, table, cb, indentation=0}) {
         let child_count: number = 0;
         let child_mapping: Docupilot.Mapping = {};
         child_components = docupilot_field.fields.map(child_field => {
-            return <MappingComponent key={child_count++} docupilot_field={child_field} table={linked_table} indentation={indentation+10}
+            return <MappingComponent key={child_count++} docupilot_field={child_field} table={linked_table} level={level+1}
                                      cb={(newValue) => {
                                          child_mapping[child_field.name] = newValue;
                                          cb(mapping_value);
@@ -69,7 +69,7 @@ function MappingComponent({docupilot_field, table, cb, indentation=0}) {
         mapping_value.fields = child_mapping;
     }
     return (
-        <Box borderLeft={indentation != 0? '1px solid #E5E5E5': null}>
+        <Box borderLeft={level > 0? '1px solid #E5E5E5': null} marginLeft={level > 1? '11px': null}>
             {main_component}
             {child_components}
         </Box>
@@ -86,10 +86,10 @@ export function SchemaComponent({schema, activeTable, updateMapping}) {
     });
 
     return (
-        <Box marginX="12px" marginY="24px">
+        <Box marginY="24px">
             <Box display="flex" paddingY="16px">
-                <Text width="50%" size="large" textColor="light">Docupilot fields</Text>
-                <Text width="50%" size="large" textColor="light">Airtable fieds/columns</Text>
+                <Text width="50%" textColor="light">Docupilot fields</Text>
+                <Text width="50%" textColor="light">Airtable fieds/columns</Text>
             </Box>
             <Box>
                 {mapping_components}

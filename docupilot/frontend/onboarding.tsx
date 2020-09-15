@@ -1,6 +1,6 @@
 import React from "react";
-import {Box, Text, Button, Heading, loadCSSFromString} from "@airtable/blocks/ui";
-import {MasterLogoWhite} from "./images";
+import {Box, Text, Button, loadCSSFromString} from "@airtable/blocks/ui";
+import {WrapperComponent} from "./common";
 
 loadCSSFromString(`.instruction-list:before {
     content: "";
@@ -41,25 +41,23 @@ export function OnBoardingComponent({getStarted}) {
     const instruction_components = onBoardingInstructions.map(i => <InstructionComponent key={i_count} count={++i_count}
                                                                                          isLast={i_count==onBoardingInstructions.length}
                                                                                          instruction={i}/>);
-    return (
-        <Box className="onboarding-view" padding={5} backgroundColor="#071C3F">
-            <Box>
-                <MasterLogoWhite/>
-            </Box>
-            <Text fontSize={3} lineHeight="24px" marginY="8px">
+    const onboarding_component = (
+        <Box className="onboarding-view">
+            <Text fontSize={3} lineHeight="24px">
                 Intuitive, flexible, and affordable Document Automation Software
             </Text>
-            <Box className="instruction-box" marginY="20px">
+            <Box className="instruction-box" marginY="28px">
                 <Text opacity="0.8">Get Started</Text>
                 <Box className="instruction-list" position="relative" marginTop="12px">
                     {instruction_components}
                 </Box>
             </Box>
-            <Button variant="primary" marginY="8px" width="155px" onClick={getStarted}>
+            <Button variant="primary" width="155px" onClick={getStarted}>
                 <Text fontWeight="600" fontSize="14px">
                     Get Started
                 </Text>
             </Button>
         </Box>
     );
+    return <WrapperComponent theme="dark" child_component={onboarding_component}/>;
 }

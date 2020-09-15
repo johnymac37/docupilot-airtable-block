@@ -27,8 +27,7 @@ export function MainComponent() {
 
     if (route == 'template-view') {
         if (!selected_record_ids.length) {
-            return <InformationComponent icon_name="checklist" icon_color="#B3B3B3" show_icon_bg={false}
-                                         content="Select records to generate documents with docupilot"/>;
+            return <InformationComponent image_icon="select-record" content="Select records to generate documents with docupilot"/>;
         }
         if (templates) {
             return <TemplateComponent templates={templates} refreshTemplates={refreshTemplates}
@@ -39,27 +38,27 @@ export function MainComponent() {
         let context_count = 0;
         let context: [{record: string, generated_document: string}] = page_context || [];
         const merge_context = context.map(c => <Box key={context_count++} display="flex" borderBottom="1px solid #E5E5E5" paddingY='12px'>
-            <Text flex="1" size="large" textColor="light">{c.record}</Text>
+            <Text flex="1" fontWeight="500" fontSize="14px" textColor="light">{c.record}</Text>
             <Box paddingX="12px" display="flex">
                 <Icon name="file" size={20} marginX="6px"/>
-                <Text size="large" textColor="#B3B3B3">{c.generated_document}</Text>
+                <Text fontSize="12px" textColor="#B3B3B3">{c.generated_document}</Text>
             </Box>
         </Box>)
-        return <InformationComponent icon_name="check" icon_color="#36FFC3"
+        return <InformationComponent image_icon="merge-success"
                                      content="Document created successfully 🎉"
                                      sub_content={merge_context}
                                      actions={[
-                                         {label: 'Dismiss', onClick: () => {
+                                         {label: 'Dismiss', textColor: 'light', onClick: () => {
                                              setSelectedTemplate(null);
                                              setRoute('template-view');
                                          }}
                                          ]}/>;
     } else if (route == 'merge-fail') {
-        return <InformationComponent icon_name="warning" icon_color="#F36F6F"
+        return <InformationComponent image_icon="merge-fail"
                                      content="Document creation failed ☹️"
                                      actions={[
                                          {label: 'Retry again', onClick: () => {setRoute('template-view')}},
-                                         {label: 'Dismiss', variant: 'secondary', onClick: () => {
+                                         {label: 'Dismiss', variant: 'secondary', textColor: 'light', onClick: () => {
                                              setSelectedTemplate(null);
                                              setRoute('template-view');
                                          }}
