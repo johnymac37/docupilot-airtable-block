@@ -1,7 +1,5 @@
 import React from "react";
-import {
-    Icon
-} from '@airtable/blocks/ui';
+import {Icon} from '@airtable/blocks/ui';
 
 export function ImageIcon({name}) {
     return {
